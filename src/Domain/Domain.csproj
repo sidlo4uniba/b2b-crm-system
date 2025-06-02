@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CRMBackend.Domain</RootNamespace>
+    <AssemblyName>CRMBackend.Domain</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Plainquire.Filter" />
+  </ItemGroup>
+
+</Project>

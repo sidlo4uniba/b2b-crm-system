@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="utf-8" />
+    <title>Faktúra @Model.CisloDokumentu</title>
+
+    <style>
+        :root{
+            --tb-border:#c7c7c7;
+            --light:#f5f7fa;
+            --accent:#005ea8;
+            --accent-light:#dae6f3;
+        }
+        *{
+            box-sizing:border-box;
+        }
+        body{
+            font-family:Arial,Helvetica,sans-serif;
+            margin:0;
+            padding:25px;
+            color:#222;
+        }
+        h1,h2,h3{
+            margin:0;
+        }
+        h1{
+            font-size:1.6rem;
+        }
+        .flex{
+            display:flex;
+            gap:20px;
+            flex-wrap:wrap;
+        }
+        .info-box{
+            flex:1 1 0;
+            padding:20px;
+            border:1px solid var(--tb-border);
+            margin-bottom: 20px;
+        }
+        .info-box--grey{
+            background:var(--light);
+        }
+        .seller .name{
+            font-size:1.25rem;
+            font-weight:700;
+            color:var(--accent);
+        }
+        .divider{
+            border:none;
+            border-top:1px solid #ccc;
+            margin:12px 0;
+        }
+        .meta{
+            display:flex;
+            gap:25px;
+        }
+        .meta-col{
+            flex:1 1 0;
+        }
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:15px;
+        }
+        th,td{
+            padding:10px;
+            border:1px solid var(--tb-border);
+        }
+        th{
+            background:var(--accent-light);
+        }
+        .right{
+            text-align:right;
+        }
+        .total-row td{
+            font-weight:700;
+        }
+        .color-dot{
+            display:inline-block;
+            width:14px;
+            height:14px;
+            border-radius:50%;
+            margin-right:5px;
+            vertical-align:middle;
+            border:1px solid #888;
+        }
+        footer{
+            margin-top:40px;
+            font-size:.85rem;
+            text-align:center;
+            color:#666;
+            border-top:1px solid var(--tb-border);
+            padding-top:10px;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="info-box meta" style="margin-top:20px;">
+        <div class="meta-col">
+            <h2>Faktúra č.</h2>
+            <h1>@Model.CisloDokumentu</h1>
+            <br>
+            Dátum vystavenia: <strong>@Model.DatumVystavenia.ToString("dd.MM.yyyy")</strong><br/>
+            Dátum splatnosti: <strong>@Model.DatumSplatnosti.ToString("dd.MM.yyyy")</strong>
+        </div>
+    </section>
+    
+    <section class="flex">
+        <div class="info-box seller">
+            <div class="name">PromoProfi, s.&nbsp;r.&nbsp;o.</div>
+            <div class="divider"></div>
+
+            <div>IČO: 51234587</div>
+            <div>DIČ: 2123458765</div>
+            <div>IČ DPH: SK2123458765</div>
+            <div class="divider"></div>
+
+            <div>Priemyselná&nbsp;12<br/>917&nbsp;01&nbsp;Trnava</div>
+            <div class="divider"></div>
+
+            <div>tel.: +421&nbsp;33&nbsp;123&nbsp;4567</div>
+            <div>info@promoprofi.sk</div>
+            <div class="divider"></div>
+            
+            <div>IBAN: SK54&nbsp;1100&nbsp;0000&nbsp;0029&nbsp;8765&nbsp;4321 (Tatra&nbsp;banka)</div>
+            <div>Variabilný symbol: @Model.CisloDokumentu</div>
+        </div>
+
+        <div class="info-box info-box--grey">
+            <h2>Kupujúci:</h2>
+            <div class="divider"></div>
+            <strong>@Model.NazovFirmy</strong><br />
+            IČO: @Model.ICO<br/>
+            @if(!string.IsNullOrEmpty(Model.IcDph)){ <text>IČ DPH: @Model.IcDph<br/></text> }
+            <div class="divider"></div>
+
+            @Model.Adresa.Ulica,<br/>@Model.Adresa.PSC&nbsp;@Model.Adresa.Mesto<br/>@Model.Adresa.Krajina
+            <div class="divider"></div>
+
+            Kontaktná osoba: @Model.KontaktnaOsobaMeno&nbsp;@Model.KontaktnaOsobaPriezvisko<br/>
+            Tel.: @Model.KontaktnaOsobaTelefon<br/>
+            E-mail: @Model.KontaktnaOsobaEmail
+        </div>
+    </section>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Kód</th>
+                <th>Názov tovaru / služby</th>
+                <th>Množstvo</th>
+                <th>Jedn. cena</th>
+                <th>Cena celkom</th>
+                <th>Špecifikácia</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Polozky)
+        {
+            <tr>
+                <td>@item.InterneId</td>
+                <td>@item.NazovTovaru</td>
+                <td class="right">@item.Mnozstvo&nbsp;ks</td>
+                <td class="right">@item.JednotkovaCena.ToString("F2")&nbsp;€</td>
+                <td class="right">@item.CelkovaCena.ToString("F2")&nbsp;€</td>
+                <td>
+                    @if(!string.IsNullOrEmpty(item.VelkostKod)){
+                        <span><em>Veľkosť: </em>@item.VelkostKod</span><br/>
+                    }
+                    @if(!string.IsNullOrEmpty(item.FarbaHex)){
+<!--                        <span class="color-dot" style="background:@item.FarbaHex"></span>-->
+                        <span><em>Farba: </em>@item.FarbaHex</span>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="4" class="right">Celková suma k úhrade</td>
+                <td class="right">@Model.FinalnaCena.ToString("F2")&nbsp;€</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <section class="info-box" style="margin-top:20px;">
+        <strong>Dodacie podmienky:</strong> Tovar bude doručený kuriérskou službou do 3-5 pracovných dní od prijatia platby.<br/>
+        <strong>Reklamačný poriadok:</strong> V súlade so VOP dostupnými na www.promoprofi.sk/vop.<br/>
+        <strong>Elektronická fakturácia:</strong> Doklad bol vystavený elektronicky a je platný bez podpisu a pečiatky.
+    </section>
+
+    <footer>
+        Ďakujeme za Váš nákup v PromoProfi B2B e-shope s reklamnými predmetmi!<br/>
+        Faktúra bola vygenerovaná automaticky systémom CRM.
+    </footer>
+</body>
+</html> 
