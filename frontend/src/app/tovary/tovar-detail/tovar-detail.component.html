@@ -1,0 +1,348 @@
+<div class="firmy-container">
+  <div class="page-header">
+    <button mat-icon-button class="back-button" matTooltip="Späť" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1 class="page-title">{{ pageTitle }}</h1>
+    <div class="header-buttons" *ngIf="!isAddMode">
+      <button mat-raised-button color="primary" class="active-button" (click)="toggleAktivnyStatus()" [disabled]="isSaving">
+        <mat-icon>check_circle</mat-icon>
+        {{ (details$ | async)?.aktivny ? 'Deaktivovať' : 'Aktivovať' }}
+      </button>
+      <button mat-raised-button color="warn" class="delete-button" (click)="confirmDelete()">
+        <mat-icon>delete</mat-icon>
+        Vymazať
+      </button>
+    </div>
+  </div>
+
+  <div class="form-container" *ngIf="!isAddMode">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>Informácie o tovare</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="details-grid">
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">label</mat-icon>
+            <span class="details-label">Názov:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.nazov)}">
+              {{ (details$ | async)?.nazov || 'prázdne pole' }}
+            </span>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">category</mat-icon>
+            <span class="details-label">Kategória:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.kategoriaId)}">
+              {{ getCategoryName((details$ | async)?.kategoriaId || null) }}
+            </span>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">inventory_2</mat-icon>
+            <span class="details-label">Interné ID:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.interneId)}">
+              {{ (details$ | async)?.interneId || 'prázdne pole' }}
+            </span>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">qr_code</mat-icon>
+            <span class="details-label">EAN:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.ean)}">
+              {{ (details$ | async)?.ean || 'prázdne pole' }}
+            </span>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">euro</mat-icon>
+            <span class="details-label">Cena:</span>
+            <span class="details-value" [ngClass]="{'no-value': (details$ | async)?.cena === undefined}">
+              {{ (details$ | async)?.cena | currency:'EUR':'symbol':'1.2-2' }}
+            </span>
+          </div>
+
+          <div class="details-section-divider"></div>
+          
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">store</mat-icon>
+            <span class="details-label">Dodávateľ:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.dodavatelNazovFirmy)}">
+              {{ (details$ | async)?.dodavatelNazovFirmy || 'prázdne pole' }}
+            </span>
+            <button mat-icon-button color="primary" (click)="navigateToSupplier()" matTooltip="Prejsť na dodávateľa">
+              <mat-icon>open_in_new</mat-icon>
+            </button>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">email</mat-icon>
+            <span class="details-label">Email dodávateľa:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.dodavatelEmail)}">
+              {{ (details$ | async)?.dodavatelEmail || 'prázdne pole' }}
+            </span>
+          </div>
+
+          <div class="details-item">
+            <mat-icon class="details-icon">phone</mat-icon>
+            <span class="details-label">Telefón dodávateľa:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.dodavatelTelefon)}">
+              {{ (details$ | async)?.dodavatelTelefon || 'prázdne pole' }}
+            </span>
+          </div>
+
+          <div class="details-section-divider"></div>
+          
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">check_circle</mat-icon>
+            <span class="details-label">Je aktívny?:</span>
+            <span class="details-value" [ngClass]="{
+                'inactive-value': (details$ | async)?.aktivny === false,
+                'no-value': (details$ | async)?.aktivny === null || (details$ | async)?.aktivny === undefined
+              }">
+              {{ (details$ | async)?.aktivny === null || (details$ | async)?.aktivny === undefined ? 'prázdne pole'
+                 : ((details$ | async)?.aktivny ? 'Aktívny' : 'Neaktívny') }}
+            </span>
+          </div>
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">today</mat-icon>
+            <span class="details-label">Vytvorené dňa:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.vytvoreneDna)}">
+              {{ (details$ | async)?.vytvoreneDna ? ((details$ | async)?.vytvoreneDna | date:'dd.MM.yyyy - HH:mm') : 'prázdne pole' }}
+            </span>
+          </div>
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">person</mat-icon>
+            <span class="details-label">Vytvoril používateľ:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.vytvorilUzivatel)}">
+              {{ (details$ | async)?.vytvorilUzivatel || 'prázdne pole' }}
+            </span>
+          </div>
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">update</mat-icon>
+            <span class="details-label">Upravené dňa:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.upraveneDna)}">
+              {{ (details$ | async)?.upraveneDna ? ((details$ | async)?.upraveneDna | date:'dd.MM.yyyy - HH:mm') : 'prázdne pole' }}
+            </span>
+          </div>
+          
+          <div class="details-item">
+            <mat-icon class="details-icon">edit</mat-icon>
+            <span class="details-label">Upravil používateľ:</span>
+            <span class="details-value" [ngClass]="{'no-value': !((details$ | async)?.upravilUzivatel)}">
+              {{ (details$ | async)?.upravilUzivatel || 'prázdne pole' }}
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="form-container">
+    <mat-card class="form-card">
+      <mat-card-header>
+        <mat-card-title>{{ isAddMode ? 'Pridať nový tovar' : 'Upraviť existujúci tovar' }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form [formGroup]="detailForm" class="firma-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Názov tovaru</mat-label>
+              <input matInput formControlName="nazov" required>
+              <mat-icon matSuffix>label</mat-icon>
+              <mat-error *ngIf="detailForm.get('nazov')?.hasError('required')">
+                Názov tovaru je povinný
+              </mat-error>
+              <mat-error *ngIf="detailForm.get('nazov')?.hasError('maxlength')">
+                Názov tovaru nesmie presiahnuť 200 znakov
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Kategória</mat-label>
+              <mat-select formControlName="kategoriaId" required>
+                <mat-option *ngFor="let kategoria of kategorieProduktov" [value]="kategoria.id">
+                  {{ kategoria.nazov }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix>category</mat-icon>
+              <mat-error *ngIf="detailForm.get('kategoriaId')?.hasError('required')">
+                Kategória je povinná
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Interné ID</mat-label>
+              <input matInput formControlName="interneId" required placeholder="T-XX-YYYYYY">
+              <mat-icon matSuffix>inventory_2</mat-icon>
+              <mat-error *ngIf="detailForm.get('interneId')?.hasError('required')">
+                Interné ID je povinné
+              </mat-error>
+              <mat-error *ngIf="detailForm.get('interneId')?.hasError('maxlength')">
+                Interné ID nesmie presiahnuť 50 znakov
+              </mat-error>
+              <mat-error *ngIf="detailForm.get('interneId')?.hasError('pattern')">
+                Nesprávny formát Interného ID (očakávaný formát: T-XX-YYYYYY, kde X je číslo a Y je písmeno alebo číslo)
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>EAN</mat-label>
+              <input matInput formControlName="ean" placeholder="13-miestny číselný kód">
+              <mat-icon matSuffix>qr_code</mat-icon>
+              <mat-error *ngIf="detailForm.get('ean')?.hasError('minlength') || detailForm.get('ean')?.hasError('maxlength') || detailForm.get('ean')?.hasError('pattern')">
+                EAN musí byť 13-miestne číslo
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field">
+              <mat-label>Cena (€)</mat-label>
+              <input matInput formControlName="cena" type="number" min="0.01" step="0.01" required>
+              <mat-icon matSuffix>euro</mat-icon>
+              <mat-error *ngIf="detailForm.get('cena')?.hasError('required')">
+                Cena je povinná
+              </mat-error>
+              <mat-error *ngIf="detailForm.get('cena')?.hasError('min')">
+                Cena musí byť väčšia ako 0.
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div *ngIf="errorMessage" class="error-message">
+            {{ errorMessage }}
+          </div>
+
+          <div class="form-actions">
+            <button mat-stroked-button type="button" (click)="resetForm()" [disabled]="(!(formChanged$ | async) && !isAddMode) || isSaving">
+              {{ isAddMode ? 'Vymazať formulár' : 'Zrušiť zmeny' }}
+            </button>
+            <button mat-raised-button color="primary" type="button" (click)="saveForm()"
+              [disabled]="(!(formChanged$ | async) && !isAddMode) || isSaving || detailForm.invalid" class="save-button">
+              <mat-spinner *ngIf="isSaving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+              <span *ngIf="!isSaving">{{ isAddMode ? 'Pridať tovar' : 'Uložiť zmeny' }}</span>
+              <span *ngIf="isSaving">{{ isAddMode ? 'Pridávam...' : 'Ukladám...' }}</span>
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <ng-container *ngIf="!isAddMode">
+    <div class="spacer" style="height: 40px;"></div>
+
+    <div class="variants-header">
+      <h1 class="page-title">Varianty tovaru</h1>
+      <button mat-raised-button color="primary" class="add-button" (click)="openVariantDialog()">
+        <mat-icon>add</mat-icon>
+        Pridať variant
+      </button>
+    </div>
+
+    <div class="table-container mat-elevation-z8">
+      <table mat-table [dataSource]="variantsDataSource" matSort>
+        
+        <ng-container matColumnDef="velkost">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="velkost">Veľkosť</th>
+          <td mat-cell *matCellDef="let element">{{ element.velkost?.code || '-' }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="farbaHex">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="farbaHex">Farba</th>
+          <td mat-cell *matCellDef="let element"> 
+            <div *ngIf="element.farbaHex" style="display: flex; align-items: center;">
+              <div [style.background-color]="element.farbaHex" 
+                   style="width: 20px; height: 20px; margin-right: 10px; border: 1px solid #ccc;">
+              </div>
+              <span>{{ element.farbaHex }}</span>
+            </div>
+            <span *ngIf="!element.farbaHex">-</span>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="cena">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="cena">Cena</th>
+          <td mat-cell *matCellDef="let element">
+            <span [ngClass]="{'fallback-price': element.cena == null || element.cena == 0}">
+              <ng-container *ngIf="getEffectivePrice(element) != null; else noPrice">
+                {{ getEffectivePrice(element) | currency:'EUR':'':'1.2-2' }} €
+                <span *ngIf="element.cena == null || element.cena == 0"> (cena tovaru)</span>
+              </ng-container>
+              <ng-template #noPrice>-</ng-template>
+            </span>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="aktivny">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="aktivny">Aktívny</th>
+          <td mat-cell *matCellDef="let element">
+             <mat-icon [color]="element.aktivny ? 'primary' : 'warn'">
+               {{ element.aktivny ? 'check_circle' : '' }}
+             </mat-icon>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="akcie">
+          <th mat-header-cell *matHeaderCellDef>Akcie</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" (click)="openVariantDialog(element)" matTooltip="Upraviť variant">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button [color]="element.aktivny ? 'warn' : 'primary'" (click)="toggleVariantAktivny(element)" 
+                    [matTooltip]="element.aktivny ? 'Deaktivovať variant' : 'Aktivovať variant'">
+              <mat-icon>{{ element.aktivny ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteVariant(element)" matTooltip="Vymazať variant">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="variantsDisplayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: variantsDisplayedColumns;"></tr>
+      </table>
+
+      <div *ngIf="variantsDataSource.data.length === 0" class="empty-table-message">
+        <p>Tento tovar nemá žiadne varianty. Kliknite na "Pridať variant" pre vytvorenie nového variantu.</p>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<style>
+  .variants-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .form-field {
+    width: 100%;
+  }
+
+  /* Add this style for the fallback price */
+  .fallback-price {
+    color: #646464; /* Light gray color */
+    font-style: italic;
+  }
+</style>

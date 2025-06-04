@@ -1,0 +1,85 @@
+<div class="form-container">
+  <mat-card class="form-card" style="padding-top: 40px;">
+    <mat-card-content>
+      <form [formGroup]="detailForm" class="objednavka-form">
+
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Očakávaný dátum doručenia</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerOcakavany"
+              formControlName="ocakavanyDatumDorucenia"
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="pickerOcakavany"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #pickerOcakavany></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Naplánovaný dátum výroby</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerVyroba"
+              formControlName="naplanovanyDatumVyroby"
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="pickerVyroba"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #pickerVyroba></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>Poznámka</mat-label>
+            <textarea
+              matInput
+              formControlName="poznamka"
+              rows="4"
+            ></textarea>
+          </mat-form-field>
+        </div>
+
+        
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        
+        <div class="form-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="resetForm()"
+            [disabled]="!(formChanged$ | async) || isSaving"
+          >
+            Zrušiť zmeny
+          </button>
+
+          <button
+            mat-raised-button
+            style="background-color: var(--primary-color); color: white;" 
+            color="primary"
+            type="button"
+            (click)="saveForm()"
+            [disabled]="(!(formChanged$ | async)) || isSaving"
+          >
+            <mat-spinner
+              *ngIf="isSaving"
+              diameter="20"
+              style="display: inline-block; margin-right: 8px"
+            ></mat-spinner>
+            <span *ngIf="!isSaving">Uložiť</span>
+            <span *ngIf="isSaving">Ukladám…</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

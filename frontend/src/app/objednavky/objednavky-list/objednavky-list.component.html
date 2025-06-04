@@ -1,0 +1,319 @@
+<div class="firmy-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ pageTitle }}</h1>
+  </div>
+
+  <mat-expansion-panel class="filter-panel" (opened)="toggleFilterPanel(true)" (closed)="toggleFilterPanel(false)">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>filter_list</mat-icon>
+        Filtrovanie objednávok
+      </mat-panel-title>
+      <mat-panel-description>
+        <span *ngIf="!isFilterExpanded">Kliknite pre nastavenie filtrov</span>
+        <span *ngIf="isFilterExpanded">Kliknite pre skrytie filtrov</span>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+      <div class="filter-container">
+        <div class="filter-row">
+          <div class="filter-section">
+            <div class="filter-label">Fáza objednávky</div>
+            <div class="filter-content">
+               <mat-form-field appearance="outline">
+                 <mat-label>Vyberte fázu</mat-label>
+                 <mat-select formControlName="faza">
+                   <mat-option [value]="null">-- Všetky --</mat-option>
+                   <mat-option *ngFor="let faza of fazaOptions" [value]="faza.value">
+                     {{ getPhaseName(faza.value) }}
+                   </mat-option>
+                 </mat-select>
+               </mat-form-field>
+               <button *ngIf="filterForm.get('faza')?.value !== null" 
+                      mat-icon-button 
+                      class="clear-chips-button" 
+                      (click)="clearFilterField('faza')" 
+                      matTooltip="Zrušiť výber fázy">
+                 <mat-icon>clear</mat-icon>
+               </button>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">Problém klienta</div>
+            <div class="filter-content">
+              <mat-form-field appearance="outline">
+                <mat-label>Vyberte problém</mat-label>
+                <mat-select formControlName="chybaKlienta">
+                  <mat-option [value]="null">-- Všetky --</mat-option>
+                  <mat-option *ngFor="let chyba of chybaKlientaOptions" [value]="chyba.value">
+                    {{ chyba.key }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <button *ngIf="filterForm.get('chybaKlienta')?.value !== null" 
+                    mat-icon-button 
+                    class="clear-chips-button" 
+                    (click)="clearFilterField('chybaKlienta')" 
+                    matTooltip="Zrušiť výber problému">
+                <mat-icon>clear</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-row">
+          <div class="filter-section">
+            <div class="filter-label">Stav objednávky</div>
+            <div class="filter-content">
+              <mat-chip-listbox>
+                <mat-chip-option color="primary" 
+                                [selected]="filterForm.get('zrusene')?.value === true"
+                                (click)="filterForm.get('zrusene')?.setValue(filterForm.get('zrusene')?.value === true ? null : true)">
+                  Zrušené
+                </mat-chip-option>
+                <mat-chip-option color="primary" 
+                                [selected]="filterForm.get('zaplatene')?.value === true"
+                                (click)="filterForm.get('zaplatene')?.setValue(filterForm.get('zaplatene')?.value === true ? null : true)">
+                  Zaplatené
+                </mat-chip-option>
+              </mat-chip-listbox>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-row">
+          <div class="filter-section">
+            <div class="filter-label">Očakávaný dátum doručenia</div>
+            <div class="filter-content">
+              <div class="input-range">
+                <mat-form-field appearance="outline">
+                  <mat-label>Od</mat-label>
+                  <input matInput [matDatepicker]="doruceniaOdPicker" 
+                        formControlName="ocakavanyDatumDoruceniaOd">
+                  <mat-datepicker-toggle matSuffix [for]="doruceniaOdPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #doruceniaOdPicker></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Do</mat-label>
+                  <input matInput [matDatepicker]="doruceniaDoPicker" 
+                        formControlName="ocakavanyDatumDoruceniaDo">
+                  <mat-datepicker-toggle matSuffix [for]="doruceniaDoPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #doruceniaDoPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-label">Naplánovaný dátum výroby</div>
+            <div class="filter-content">
+              <div class="input-range">
+                <mat-form-field appearance="outline">
+                  <mat-label>Od</mat-label>
+                  <input matInput [matDatepicker]="vyrobaOdPicker" 
+                        formControlName="naplanovanyDatumVyrobyOd">
+                  <mat-datepicker-toggle matSuffix [for]="vyrobaOdPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #vyrobaOdPicker></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Do</mat-label>
+                  <input matInput [matDatepicker]="vyrobaDoPicker" 
+                        formControlName="naplanovanyDatumVyrobyDo">
+                  <mat-datepicker-toggle matSuffix [for]="vyrobaDoPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #vyrobaDoPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" mat-stroked-button class="reset-button" (click)="resetFilters()">Zrušiť filtre</button>
+        <button type="submit" mat-raised-button color="primary" class="apply-button" [disabled]="filterForm.invalid">Aplikovať filtre</button>
+      </div>
+    </form>
+  </mat-expansion-panel>
+
+  <div class="table-content-container">
+    <div class="table-controls">
+      <div class="search-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Vyhľadávanie</mat-label>
+          <input matInput (keyup)="applyTableSearch($event)" placeholder="Zadajte názov firmy, ICO...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="table-container mat-elevation-z8">
+       <div *ngIf="isLoadingTable" class="spinner-overlay">
+         <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+       </div>
+
+      <table mat-table [dataSource]="tableDataSource" matSort (matSortChange)="onTableSortChange($event)">
+
+        
+        <ng-container matColumnDef="firmaNazov">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Firma</th>
+          <td mat-cell *matCellDef="let element">{{ element.firmaNazov }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="faza">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fáza</th>
+          <td mat-cell *matCellDef="let element" [ngClass]="getPhaseClassName(element.faza)">
+            {{ getPhaseName(element.faza) }}
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="zrusene">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Zrušená</th>
+          <td mat-cell *matCellDef="let element">
+            <mat-icon *ngIf="element.zrusene" color="warn">cancel</mat-icon>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="firmaICO">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>IČO</th>
+          <td mat-cell *matCellDef="let element">{{ element.firmaICO }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="kontaktnaOsoba">
+          <th mat-header-cell *matHeaderCellDef>Kontaktná osoba</th>
+          <td mat-cell *matCellDef="let element">
+            {{ getFullName(element.kontaktnaOsobaMeno, element.kontaktnaOsobaPriezvisko) }}
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="naplanovanyDatumVyroby">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Dátum výroby</th>
+          <td mat-cell *matCellDef="let element">{{ formatDate(element.naplanovanyDatumVyroby) }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="ocakavanyDatumDorucenia">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Dátum doručenia</th>
+          <td mat-cell *matCellDef="let element">{{ formatDate(element.ocakavanyDatumDorucenia) }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="akcie">
+          <th mat-header-cell *matHeaderCellDef>Akcie</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button matTooltip="Upraviť objednávku" (click)="editItem(element.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button
+                    [matTooltip]="element.zrusene ? 'Obnoviť objednávku' : 'Zrušiť objednávku'"
+                    (click)="toggleOrderCancellation(element.id, element.zrusene)">
+              <mat-icon [color]="element.zrusene ? 'primary' : 'warn'">
+                {{ element.zrusene ? 'restore' : 'cancel' }}
+              </mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Vymazať objednávku" (click)="confirmDelete(element.id, element.firmaNazov)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                <div *ngIf="!isLoadingTable" class="empty-table-message">
+                  <p>Neboli nájdené žiadne objednávky zodpovedajúce zadaným kritériám.</p>
+                </div>
+            </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="pageSizeOptions"
+                    [pageSize]="pageSize"
+                    [length]="totalItems"
+                    (page)="onTablePageChange($event)"
+                    showFirstLastButtons
+                    aria-label="Select page of orders">
+      </mat-paginator>
+    </div>
+  </div>
+</div>
+
+<style>
+  .filter-content .mat-form-field {
+      width: calc(100% - 48px);
+      margin-right: 8px;
+      vertical-align: top;
+  }
+  .filter-content .clear-chips-button {
+      vertical-align: middle;
+      margin-top: 8px;
+  }
+  .input-range .mat-form-field {
+      width: calc(50% - 4px);
+  }
+  .input-range .mat-form-field:first-child {
+      margin-right: 8px;
+  }
+
+  .input-range + mat-error {
+    display: block;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    font-size: 75%;
+    color: var(--mat-form-field-error-text-color, #f44336);
+  }
+
+  .table-container {
+    position: relative;
+    min-height: 200px;
+  }
+
+  .spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .empty-table-message {
+    padding: 20px;
+    text-align: center;
+    color: grey;
+  }
+  .mat-row.mat-no-data-row .mat-cell {
+      text-align: center;
+      padding: 20px;
+      color: grey;
+  }
+  .table-controls .add-button {
+      margin-left: auto;
+  }
+
+  /* Fáza objednávky color styles */
+  .phase-nacenenie { color: #00a0eb; }
+  .phase-nacenenie-caka { color: #02569b; }
+  .phase-vyroba-neriesene { color: #864007; }
+  .phase-vyroba-nemozna { color: var(--error-color); }
+  .phase-vyroba-caka { color: #8418ff; }
+  .phase-odoslanie-caka { color: #860480; }
+  .phase-platba-caka { color: var(--error-color); }
+  .phase-vybavene { color: green; }
+</style>

@@ -1,0 +1,247 @@
+<div class="firmy-container">
+  <h1 class="page-title">Zoznam firiem</h1>
+
+  
+  <mat-expansion-panel class="filter-panel" (opened)="toggleFilterPanel(true)" (closed)="toggleFilterPanel(false)">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>filter_list</mat-icon>
+        Filtrovanie
+      </mat-panel-title>
+      <mat-panel-description>
+        <span *ngIf="!isFilterExpanded">Kliknite pre nastavenie filtrov</span>
+        <span *ngIf="isFilterExpanded">Kliknite pre skrytie filtrov</span>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+    
+    <form [formGroup]="filterForm" (ngSubmit)="applyTableFilters()">
+      <div class="filter-container">
+        
+        <div class="filter-row">
+          
+          <div class="filter-section">
+            <div class="filter-label">Skóre spoľahlivosti</div>
+            <div class="filter-content">
+              <div class="slider-container">
+                <mat-slider min="0" max="100" step="5" discrete>
+                  <input matSliderStartThumb formControlName="minSkore">
+                  <input matSliderEndThumb formControlName="maxSkore">
+                </mat-slider>
+                <div class="slider-values">
+                  <span>{{ filterForm.get('minSkore')?.value }} %</span>
+                  <span>{{ filterForm.get('maxSkore')?.value }} %</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="filter-section">
+            <div class="filter-label">Hodnota objednávok</div>
+            <div class="filter-content">
+              <div class="input-range">
+                <mat-form-field appearance="outline">
+                  <mat-label>Od</mat-label>
+                  <input matInput type="number" formControlName="minHodnota">
+                  <span matTextSuffix>€</span>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Do</mat-label>
+                  <input matInput type="number" formControlName="maxHodnota">
+                  <span matTextSuffix>€</span>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+        
+        
+        <div class="filter-row">
+          
+          <div class="filter-section">
+            <div class="filter-label">Dátum vytvorenia</div>
+            <div class="filter-content">
+              <div class="input-range">
+                <mat-form-field appearance="outline">
+                  <mat-label>Od</mat-label>
+                  <input matInput [matDatepicker]="pickerOd" formControlName="datumOd">
+                  <mat-hint>DD.MM.YYYY</mat-hint>
+                  <mat-datepicker-toggle matIconSuffix [for]="pickerOd"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerOd></mat-datepicker>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Do</mat-label>
+                  <input matInput [matDatepicker]="pickerDo" formControlName="datumDo">
+                  <mat-hint>DD.MM.YYYY</mat-hint>
+                  <mat-datepicker-toggle matIconSuffix [for]="pickerDo"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerDo></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="filter-section">
+            <div class="filter-label">Stav</div>
+            <div class="filter-content">
+              <div class="chips-container">
+                <mat-chip-listbox formControlName="stav" multiple class="chips-list">
+                  <mat-chip-option color="primary" value="nova">Nová</mat-chip-option>
+                  <mat-chip-option color="primary" value="spracovana">Spracovaná</mat-chip-option>
+                  <mat-chip-option color="primary" value="cakajuca">Čakajúca</mat-chip-option>
+                  <mat-chip-option color="primary" value="dokoncena">Dokončená</mat-chip-option>
+                </mat-chip-listbox>
+                <button mat-icon-button class="clear-chips-button" (click)="clearTableStavFilters()" matTooltip="Zrušiť výber">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        
+        <div class="filter-row">
+          <div class="filter-section">
+            <div class="filter-label">Aktívne</div>
+            <div class="filter-content">
+              <mat-chip-listbox formControlName="aktivny" class="aktivny-chips">
+                <mat-chip-option color="primary" value="aktivne" selected>Aktívne</mat-chip-option>
+                <mat-chip-option color="primary" value="neaktivne">Neaktívne</mat-chip-option>
+                <mat-chip-option color="primary" value="vsetky">Všetky</mat-chip-option>
+              </mat-chip-listbox>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="filter-actions">
+        <button type="button" mat-stroked-button class="reset-button" (click)="resetTableFilters()">Zrušiť filtre</button>
+        <button type="submit" mat-raised-button class="apply-button">Aplikovať filtre</button>
+      </div>
+    </form>
+  </mat-expansion-panel>
+
+  
+  <div class="table-content-container">
+    
+    <div class="table-controls">
+      
+      <div class="search-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Vyhľadávanie</mat-label>
+          <input matInput (keyup)="applyTableSearch($event)" placeholder="Zadajte názov firmy, IČO...">
+          
+        </mat-form-field>
+        <button mat-icon-button class="search-icon-button" (click)="loadTableData()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+      
+      
+      <button mat-raised-button class="add-button" (click)="addFirma()">
+        <mat-icon>add</mat-icon>
+        Pridať firmu
+      </button>
+    </div>
+
+    
+    <div class="table-container mat-elevation-z8">
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onTableSortChange($event)">
+        
+        <ng-container matColumnDef="nazov">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Názov</th>
+          <td mat-cell *matCellDef="let element">{{ element.nazov }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="ico">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>IČO</th>
+          <td mat-cell *matCellDef="let element">{{ element.ico }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="telefon">
+          <th mat-header-cell *matHeaderCellDef>Telefón</th>
+          <td mat-cell *matCellDef="let element">{{ element.telefon }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="skoreSpolahlivosti">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Skóre spoľahlivosti</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="score-container">
+              <span class="score-text-left">{{ element.skoreSpolahlivosti }}%</span>
+              <div class="score-bar">
+                <div class="score-fill" [style.width.%]="element.skoreSpolahlivosti" 
+                    [ngClass]="{
+                      'low': element.skoreSpolahlivosti < 40,
+                      'medium': element.skoreSpolahlivosti >= 40 && element.skoreSpolahlivosti < 70,
+                      'high': element.skoreSpolahlivosti >= 70
+                    }">
+                </div>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="hodnotaObjednavok">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Hodnota objednávok</th>
+          <td mat-cell *matCellDef="let element">{{ element.hodnotaObjednavok | currency:'EUR':'symbol':'1.0-0' }}</td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="farba">
+          <th mat-header-cell *matHeaderCellDef> Farba </th>
+          <td mat-cell *matCellDef="let element"> 
+            <div style="display: flex; align-items: center;">
+              <span>{{element.farba}}</span>
+              <div [style.background-color]="element.farba" 
+                   style="width: 20px; height: 20px; margin-left: 10px; border: 1px solid #ccc;">
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="akcie">
+          <th mat-header-cell *matHeaderCellDef>Akcie</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" (click)="editFirma(element.id)" matTooltip="Upraviť">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteFirma(element.id)" matTooltip="Vymazať">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      
+      <div *ngIf="isEmpty" class="empty-table-message">
+        <p>Neboli nájdené žiadne firmy zodpovedajúce zadaným kritériám.</p>
+      </div>
+
+      <mat-paginator [pageSizeOptions]="pageSizeOptions" 
+                    [pageSize]="pageSize"
+                    [length]="totalItems"
+                    (page)="onTablePageChange($event)"
+                    showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div> 

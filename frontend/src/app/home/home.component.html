@@ -1,0 +1,190 @@
+<div class="home-container">
+  <mat-card class="home-card">
+    <mat-card-header>
+      <mat-card-title>
+        
+        <h1 *ngIf="isLoggedIn" class="welcome-message"><span class="welcome-text">Vitajte späť, </span> <span class="user-name">{{ username }}</span></h1>
+        
+        <h1 *ngIf="!isLoggedIn" class="welcome-message">Vitajte v CRM systéme</h1>
+      </mat-card-title>
+      <mat-card-subtitle *ngIf="isLoggedIn">
+        Úspešne ste sa prihlásili do systému.
+      </mat-card-subtitle>
+      <mat-card-subtitle *ngIf="!isLoggedIn">
+        Pre prístup k funkcionalite CRM systému sa prosím prihláste.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      
+      <div *ngIf="!isLoggedIn" class="login-section">
+        <button mat-raised-button style="background-color: var(--primary-color); color: var(--text-light); padding: 12px 24px; font-size: 20px;" (click)="login()">Prihlásiť sa</button>
+      </div>
+
+      
+      <div *ngIf="isLoggedIn">
+        <p style="font-weight: 500;">Vaša rola v systéme: <strong>{{ userRole }}</strong></p>
+
+        
+        <div class="access-info">
+          <h2>Máte prístup k nasledujúcim modulom:</h2>
+          <div class="modules-grid">
+            
+            <a *ngIf="hasAdminOrObchodnik" routerLink="/firmy" class="module-card">
+              <h3>Firmy</h3>
+              <div class="action-link">
+                <span>Prejsť na Firmy</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </div>
+            </a>
+
+            
+            <a *ngIf="hasAdminOrObchodnik" routerLink="/objednavky" class="module-card">
+              <h3>Objednávky</h3>
+              <div class="action-link">
+                <span>Prejsť na Objednávky</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </div>
+            </a>
+
+            
+            <a *ngIf="hasAdminOrSkladnik" routerLink="/dodavatelia" class="module-card">
+              <h3>Dodávatelia</h3>
+              <div class="action-link">
+                <span>Prejsť na Dodávateľov</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </div>
+            </a>
+
+            
+            <a *ngIf="hasAdminOrSkladnik" routerLink="/tovary" class="module-card">
+              <h3>Tovary</h3>
+              <div class="action-link">
+                <span>Prejsť na Tovary</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div> 
+
+<style>
+:root {
+  --primary-color: #3f51b5;
+  --text-dark: #333;
+  --text-light: #fff;
+  --bg-light: #fff;
+}
+
+.home-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 3rem;
+}
+
+.home-card {
+  max-width: 800px;
+  padding: 0 4rem;
+  width: 100%;
+}
+
+h1 {
+  color: var(--primary-color);
+  margin-bottom: 1.2rem;
+}
+
+.welcome-message {
+  margin-bottom: 1.5rem !important;
+}
+
+.welcome-text {
+  color: black;
+  font-weight: 400; /* Less bold */
+}
+
+.user-name {
+  color: var(--primary-color);
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  color: var(--text-dark);
+}
+
+.access-info {
+  margin-top: 2rem;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Force exactly 2 columns */
+  column-gap: 2.5rem; /* Horizontal spacing */
+  row-gap: 3rem; /* Much larger vertical spacing between rows */
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.module-card {
+  display: block;
+  border-radius: 8px;
+  padding: 1.2rem 1.8rem; /* Increased horizontal padding */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  text-decoration: none;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  min-height: 50px; /* Much shorter height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.module-card:hover {
+  transform: translateY(-3px); /* Reduced lift effect */
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15); /* Reduced shadow */
+}
+
+.module-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem; /* Reduced margin */
+  color: var(--text-light);
+  font-size: 1.2rem; /* Reduced font size */
+}
+
+.action-link {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  font-weight: 400; /* Less bold */
+  font-size: 0.9rem; /* Reduced font size */
+  margin-top: 0.5rem;
+}
+
+.action-link mat-icon {
+  margin-left: 0.4rem;
+  font-size: 1rem; /* Smaller icon */
+  height: 1rem;
+  width: 1rem;
+}
+
+mat-card-content {
+  margin-bottom: 2rem;
+}
+
+.login-section {
+  text-align: center;
+  padding: 2rem;
+}
+
+.login-section button {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  padding: 0.5rem 2rem;
+}
+</style>

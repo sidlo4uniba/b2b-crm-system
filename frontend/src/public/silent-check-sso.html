@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Silent SSO Check</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <script>
+      /**
+       * This script is used by the Keycloak silent-check-sso feature.
+       * It posts the current location back to the parent window, allowing
+       * the Keycloak client to process the authentication response without
+       * redirecting the main application.
+       */
+      parent.postMessage(location.href, location.origin);
+    </script>
+  </body>
+</html> 

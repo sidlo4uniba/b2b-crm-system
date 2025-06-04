@@ -1,0 +1,167 @@
+<div class="cenova-ponuka-container">
+  <div class="table-content-container">
+    <div class="table-controls">
+      <div class="search-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Vyhľadávanie</mat-label>
+          <input matInput (keyup)="applyTableSearch($event)" placeholder="Zadajte názov, ID...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="table-container mat-elevation-z8">
+      <div *ngIf="isLoadingTable" class="spinner-overlay">
+        <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+      </div>
+
+      <table mat-table [dataSource]="tableDataSource" matSort (matSortChange)="onTableSortChange($event)" class="pricing-table">
+        
+        <ng-container matColumnDef="interneId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Interné ID</th>
+          <td mat-cell *matCellDef="let element">{{ element.interneId }}</td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="nazovTovaru">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Názov tovaru</th>
+          <td mat-cell *matCellDef="let element">{{ element.nazovTovaru }}</td>
+          <td mat-footer-cell *matFooterCellDef><strong>CELKOM</strong></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="kategoriaId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Kategória</th>
+          <td mat-cell *matCellDef="let element">{{ getCategoryName(element.kategoriaId) }}</td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="velkost">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Veľkosť</th>
+          <td mat-cell *matCellDef="let element">
+            <span *ngIf="element.velkost">{{ element.velkost }}</span>
+            <span *ngIf="!element.velkost">-</span>
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="farbaHex">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Farba</th>
+          <td mat-cell *matCellDef="let element"> 
+            <div *ngIf="element.farbaHex" style="display: flex; align-items: center;">
+              <div [style.background-color]="element.farbaHex" 
+                   style="width: 20px; height: 20px; margin-right: 10px; border: 1px solid #ccc;">
+              </div>
+              <span>{{ element.farbaHex }}</span>
+            </div>
+            <span *ngIf="!element.farbaHex">-</span>
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="mnozstvo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Množstvo</th>
+          <td mat-cell *matCellDef="let element">{{ element.mnozstvo }}</td>
+          <td mat-footer-cell *matFooterCellDef><strong>{{ footerData.celkoveMnozstvo }}</strong></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="cena">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Cena/ks</th>
+          <td mat-cell *matCellDef="let element">{{ element.cena | currency:'EUR':'symbol':'1.2-2' }}</td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="celkovaCena">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Celková cena</th>
+          <td mat-cell *matCellDef="let element">{{ element.mnozstvo * element.cena | currency:'EUR':'symbol':'1.2-2' }}</td>
+          <td mat-footer-cell *matFooterCellDef><strong>{{ footerData.celkovaCena | currency:'EUR':'symbol':'1.2-2' }}</strong></td>
+        </ng-container>
+
+        
+        <ng-container matColumnDef="akcie">
+          <th mat-header-cell *matHeaderCellDef>Akcie</th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" 
+                    matTooltip="Upraviť množstvo"
+                    (click)="editQuantity(element)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" 
+                    matTooltip="Odstrániť tovar"
+                    (click)="deleteItem(element)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: true"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div *ngIf="!isLoadingTable" class="empty-table-message">
+              <p>Cenová ponuka neobsahuje žiadne tovary.</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="pageSizeOptions"
+                    [pageSize]="pageSize"
+                    [length]="totalItems"
+                    showFirstLastButtons
+                    aria-label="Select page of tovary">
+      </mat-paginator>
+    </div>
+  </div>
+</div>
+
+<style>
+  .pricing-table .mat-footer-row {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .table-container {
+    position: relative;
+    min-height: 200px;
+  }
+
+  .spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .empty-table-message {
+    padding: 20px;
+    text-align: center;
+    color: grey;
+  }
+  
+  .mat-row.mat-no-data-row .mat-cell {
+    text-align: center;
+    padding: 20px;
+    color: grey;
+  }
+  
+  .table-controls .add-button {
+    margin-left: auto;
+  }
+</style>

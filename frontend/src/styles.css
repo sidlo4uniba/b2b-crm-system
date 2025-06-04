@@ -1,0 +1,52 @@
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+  
+  --primary-color: #2c4b7c;      
+  --primary-light: #4a6891;      
+  --primary-dark: #1a3561;       
+  --secondary-color: #f8f9fa;    
+  --secondary-dark: #e9ecef;     
+  
+  
+  --accent-color: #5c88c5;       
+  --accent-light: #d6e4ff;       
+  --accent-dark: #3d5a80;        
+  
+  
+  --text-primary: #212529;       
+  --text-secondary: #495057;     
+  --text-light: #f8f9fa;         
+  
+  
+  --success-color: #2e7d32;      
+  --warning-color: #e65100;      
+  --error-color: #c62828;        
+  
+  
+  --header-height: 64px;
+  --sidenav-width: 240px;
+  
+  
+  --font-size-small: 0.85rem;
+  --font-size-normal: 1rem;
+  --font-size-medium: 1.2rem;
+  --font-size-large: 1.5rem;
+  --font-size-xlarge: 2rem;
+}
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+.text-small { font-size: var(--font-size-small); }
+.text-normal { font-size: var(--font-size-normal); }
+.text-medium { font-size: var(--font-size-medium); }
+.text-large { font-size: var(--font-size-large); }
+.text-xlarge { font-size: var(--font-size-xlarge); }

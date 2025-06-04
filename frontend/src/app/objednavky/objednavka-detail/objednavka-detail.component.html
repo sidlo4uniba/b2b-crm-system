@@ -1,0 +1,476 @@
+<div class="firmy-container">
+    
+    <app-objednavka-titlebar 
+        [objednavkaDetailData]="orderDetailData"
+        (orderUpdated)="loadOrderDetails()">
+    </app-objednavka-titlebar>
+
+    
+    
+    <app-objednavka-header
+      [orderDetail]="orderDetailData"
+      (orderUpdated)="loadOrderDetails()">
+    </app-objednavka-header>
+
+    <app-objednavka-form
+      [orderDetailData]="orderDetailData"
+      (orderUpdated)="loadOrderDetails()">
+    </app-objednavka-form>
+
+    <div style="margin-top: 20px; margin-left:20px;">
+      <h1 class="page-title">Aktuálna cenová ponuka</h1>
+    </div>
+    
+    <app-tovary-cenova-ponuka 
+    [(selectedItems)]="selectedItems" 
+    [orderDetail]="orderDetailData">
+    </app-tovary-cenova-ponuka>
+
+    
+    <div *ngIf="shouldShowActionButtons() && !hasChangesInSelectedItems()" 
+         style="color: grey; font-size: large; text-align: right; margin: 10px 20px; font-style: italic;">
+      Nie sú vykonané žiadne zmeny.
+    </div>
+
+    
+    <div class="action-buttons" *ngIf="shouldShowActionButtons() && hasChangesInSelectedItems()">
+      <div class="button-container">
+        <button mat-raised-button 
+                style="background-color: var(--error-color); color: white;"
+                [disabled]="isLoadingAction || isSavingChanges"
+                (click)="cancelChangesInSelectedItems()">
+          <mat-icon>cancel</mat-icon>
+          Zrušiť zmeny
+        </button>
+        <button mat-raised-button 
+                style="background-color: var(--primary-color); color: white;"
+                [disabled]="isLoadingAction || isSavingChanges"
+                (click)="saveSelectedItemChanges()">
+          <mat-icon>save</mat-icon>
+          Uložiť zmeny
+          <mat-spinner *ngIf="isSavingChanges" diameter="20" style="display: inline-block; margin-left: 8px;"></mat-spinner>
+        </button>
+      </div>
+    </div>
+
+    <app-vyber-tovaru 
+    *ngIf="shouldShowVyberTovaru()"
+    [(selectedItems)]="selectedItems">
+    </app-vyber-tovaru>
+
+    <div class="final-price-section" style="margin-top: 20px; margin-left: 20px; margin-right: 20px; background-color: white; border-radius: 8px; padding: 20px 40px 20px 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <h2 class="page-title">Odoslanie cenovej ponuky</h2>
+        <div style="width: 1px; height:10px;"></div>
+        
+        
+        <div *ngIf="orderDetailData?.faza === ObjednavkaFaza.Nacenenie" class="quote-form">
+            <div class="price-info">
+                <div class="price-row">
+                    <span class="price-label">Vypočítaná cena:</span>
+                    <span class="price-value">{{ calculateTotalPrice() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+                
+                <div class="price-row">
+                    <span class="price-label">Upravená cena (dohodnutá s klientom):</span>
+                    <mat-form-field appearance="outline" class="adjusted-price-field">
+                        <input matInput type="number" step="0.01" min="0" [(ngModel)]="adjustedPrice" placeholder="Zadajte upravenú cenu">
+                        <span style="margin-right: 10px;" matSuffix>€</span>
+                    </mat-form-field>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div *ngIf="orderDetailData?.zrusene" class="empty-quote-message">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>Zrušená objednávka sa nemôže odoslať. Kliknite na "Obnoviť objednávku" v hornej časti stránky.</span>
+                </div>
+                <div *ngIf="hasChangesInSelectedItems() && !orderDetailData?.zrusene" class="empty-quote-message">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>Máte neuložené zmeny v cenovej ponuke. Kliknite na "Uložiť zmeny" vyššie pri vybraných tovaroch.</span>
+                </div>
+                <div *ngIf="!hasOriginalItems() && !orderDetailData?.zrusene" class="empty-quote-message">
+                    <mat-icon color="warn">warning</mat-icon>
+                    <span>Nemôžete odoslať prázdnu cenovú ponuku. Pridajte aspoň jednu položku.</span>
+                </div>
+              </div>
+                
+                <button *ngIf="hasOriginalItems() && !orderDetailData?.zrusene" 
+                        mat-raised-button 
+                        style="background-color: var(--primary-color); color: white;"
+                        [disabled]="isLoadingAction"
+                        (click)="sendPriceQuote()">
+                    <mat-icon>send</mat-icon>
+                    Odoslať cenovú ponuku
+                    <mat-spinner *ngIf="isLoadingSend" diameter="20" style="display: inline-block; margin-left: 8px;"></mat-spinner>
+                </button>
+            </div>
+        </div>
+        
+        
+        <div *ngIf="orderDetailData?.faza === ObjednavkaFaza.NacenenieCaka" class="quote-approval">
+
+          <div class="approved-message">
+              <mat-icon style="color: var(--primary-color);">access_time</mat-icon>
+              <span>Čaká sa na vyjadrenie klienta</span>
+          </div>
+            <div class="price-info">
+                <div class="price-row">
+                    <span class="price-label">Finálna cena:</span>
+                    <span class="price-value">{{ getFinalPrice() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div *ngIf="orderDetailData?.zrusene" class="empty-quote-message">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>Zrušená objednávka sa nemôže schváliť ani zrušiť. Kliknite na "Obnoviť objednávku" v hornej časti stránky.</span>
+                </div>
+              </div>
+                <button mat-raised-button
+                        style="background-color: #f5f5f5; color: var(--primary-color);"
+                        [disabled]="isLoadingAction"
+                        (click)="downloadPdf()">
+                    <mat-icon>download</mat-icon>
+                    Stiahnuť PDF cenovej ponuky
+                </button>
+                
+                <div class="button-container">
+                    <button mat-raised-button  *ngIf="!orderDetailData?.zrusene" 
+                            style="background-color: var(--error-color); color: white;"
+                            [disabled]="isLoadingAction"
+                            (click)="rejectPriceQuote()">
+                        <mat-icon>cancel</mat-icon>
+                        Zrušiť cenovú ponuku
+                    </button>
+                    <button mat-raised-button   *ngIf="!orderDetailData?.zrusene" 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction"
+                            (click)="approvePriceQuote()">
+                        <mat-icon>check_circle</mat-icon>
+                        Schváliť cenovú ponuku
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        
+        <div *ngIf="orderDetailData && orderDetailData.faza > ObjednavkaFaza.NacenenieCaka" class="quote-approved">
+            <div class="approved-message">
+                <mat-icon style="color: green;">check_circle</mat-icon>
+                <span>Cenová ponuka bola schválená</span>
+            </div>
+            
+            <div class="price-info">
+                <div class="price-row">
+                    <span class="price-label">Schválená cena:</span>
+                    <span class="price-value">{{ getFinalPrice() | currency:'EUR':'symbol':'1.2-2' }}</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button mat-raised-button 
+                        style="background-color: #f5f5f5; color: var(--primary-color);"
+                        [disabled]="isLoadingAction"
+                        (click)="downloadPdf()">
+                    <mat-icon>download</mat-icon>
+                    Stiahnuť PDF cenovej ponuky
+                </button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div *ngIf="orderDetailData && orderDetailData.faza > ObjednavkaFaza.NacenenieCaka" 
+         class="phase-management-section" 
+         style="margin-top: 40px; margin-left: 20px; margin-right: 20px; margin-bottom: 40px; background-color: white; border-radius: 8px; padding: 20px 40px 60px 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        
+        <h2 class="page-title">Správa objednávky</h2>
+        <div style="width: 1px; height:10px;"></div>
+        
+        
+        <div class="phase-info">
+            <div class="phase-label">Aktuálna fáza:</div>
+            <div class="phase-value">{{ getFazaText(orderDetailData.faza) }}</div>
+        </div>
+        
+        
+        <div *ngIf="orderDetailData.zrusene" class="warning-message">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>Zrušená objednávka nemôže meniť fázu. Kliknite na "Obnoviť objednávku" v hornej časti stránky.</span>
+        </div>
+        
+        
+        <div *ngIf="!orderDetailData.zrusene" class="phase-management-content">
+            
+            <div class="phase-change-section">
+                <div class="section-title">Zmena fázy</div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.VyrobaNeriesene" class="phase-buttons">
+                    <button mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.VyrobaNemozna)">
+                        <mat-icon>block</mat-icon>
+                        Zmeň na "Výroba nie je možná"
+                    </button>
+                    <button mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.VyrobaCaka)">
+                        <mat-icon>schedule</mat-icon>
+                        Zmeň na "Výroba čaká"
+                    </button>
+                </div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.VyrobaNemozna" class="phase-buttons">
+                    <button mat-raised-button color="primary" [disabled]="isLoadingAction" (click)="changePhase(ObjednavkaFaza.VyrobaNeriesene)">
+                        <mat-icon>engineering</mat-icon>
+                        Vráť na "Výroba neriešené"
+                    </button>
+                    <button mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.VyrobaCaka)">
+                        <mat-icon>schedule</mat-icon>
+                        Zmeň na "Výroba čaká"
+                    </button>
+                </div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.VyrobaCaka" class="phase-buttons">
+                    <button mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.OdoslanieCaka)">
+                        <mat-icon>local_shipping</mat-icon>
+                        Zmeň na "Odoslanie čaká"
+                    </button>
+                    <button mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.VyrobaNemozna)">
+                        <mat-icon>block</mat-icon>
+                        Zmeň na "Výroba nie je možná"
+                    </button>
+                    <button mat-raised-button [disabled]="isLoadingAction" (click)="changePhase(ObjednavkaFaza.VyrobaNeriesene)">
+                        <mat-icon>engineering</mat-icon>
+                        Vráť na "Výroba neriešené"
+                    </button>
+                </div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.OdoslanieCaka" class="phase-buttons">
+                    
+                    <button *ngIf="!orderDetailData.zaplatene" 
+                            mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.PlatbaCaka)">
+                        <mat-icon>payment</mat-icon>
+                        Zmeň na "Platba čaká"
+                    </button>
+                    
+                    
+                    <button *ngIf="orderDetailData.zaplatene"
+                            mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.Vybavene)">
+                        <mat-icon>check_circle</mat-icon>
+                        Zmeň na "Vybavené"
+                    </button>
+                    
+                    <button mat-raised-button [disabled]="isLoadingAction" (click)="changePhase(ObjednavkaFaza.VyrobaCaka)">
+                        <mat-icon>arrow_back</mat-icon>
+                        Vráť na "Výroba čaká"
+                    </button>
+                </div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.PlatbaCaka" class="phase-buttons">
+                    
+                    <button *ngIf="orderDetailData.zaplatene"
+                            mat-raised-button 
+                            style="background-color: var(--primary-color); color: white;"
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.Vybavene)">
+                        <mat-icon>check_circle</mat-icon>
+                        Zmeň na "Vybavené"
+                    </button>
+                    
+                    <button mat-raised-button [disabled]="isLoadingAction" (click)="changePhase(ObjednavkaFaza.OdoslanieCaka)">
+                        <mat-icon>local_shipping</mat-icon>
+                        Vráť na "Odoslanie čaká"
+                    </button>
+                </div>
+                
+                
+                <div *ngIf="orderDetailData.faza === ObjednavkaFaza.Vybavene" class="phase-buttons">
+                    
+                    <button *ngIf="!orderDetailData.zaplatene"
+                            mat-raised-button 
+                            [disabled]="isLoadingAction" 
+                            (click)="changePhase(ObjednavkaFaza.PlatbaCaka)">
+                        <mat-icon>payment</mat-icon>
+                        Vráť na "Platba čaká"
+                    </button>
+                    
+                    <button mat-raised-button [disabled]="isLoadingAction" (click)="changePhase(ObjednavkaFaza.OdoslanieCaka)">
+                        <mat-icon>local_shipping</mat-icon>
+                        Vráť na "Odoslanie čaká"
+                    </button>
+                </div>
+            </div>
+            
+            
+            <div class="payment-section">
+                <div class="section-title">Platba</div>
+                <mat-slide-toggle 
+                    #paymentToggle
+                    [checked]="orderDetailData.zaplatene"
+                    [disabled]="isLoadingAction"
+                    (change)="togglePaymentStatus($event)"
+                    color="primary">
+                    {{ paymentToggle.checked ? 'Zaplatené' : 'Nezaplatené' }}
+                </mat-slide-toggle>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px 20px;
+  }
+  
+  .button-container {
+    display: flex;
+    gap: 16px;
+  }
+
+  .price-info {
+    margin-bottom: 20px;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .price-label {
+    font-weight: 500;
+    min-width: 250px;
+  }
+
+  .price-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .adjusted-price-field {
+    width: 250px;
+    margin-left: 10px;
+  }
+
+  .empty-quote-message {
+    display: flex;
+    align-items: center;
+    color: var(--error-color);
+    margin-right: 20px;
+  }
+
+  .empty-quote-message mat-icon {
+    margin-right: 8px;
+  }
+
+  .approved-message {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .approved-message mat-icon {
+    margin-right: 8px;
+    font-size: 24px;
+    height: 24px;
+    width: 24px;
+  }
+
+  /* Styles for the phase management section */
+  .phase-management-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .phase-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .phase-label {
+    font-weight: 500;
+    margin-right: 10px;
+    min-width: 120px;
+  }
+
+  .phase-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+    background-color: #f5f5f5;
+    padding: 5px 15px;
+    border-radius: 4px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
+
+  .phase-change-section {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .phase-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .payment-section {
+    padding-top: 10px;
+  }
+
+  .warning-message {
+    display: flex;
+    align-items: center;
+    background-color: #fff4f4;
+    border-left: 4px solid var(--error-color);
+    padding: 12px;
+    margin: 15px 0;
+    border-radius: 4px;
+  }
+
+  .warning-message mat-icon {
+    margin-right: 10px;
+    color: var(--error-color);
+  }
+</style>

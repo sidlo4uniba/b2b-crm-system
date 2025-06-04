@@ -1,0 +1,25 @@
+
+<div class="page-header">
+  <button mat-icon-button class="back-button" matTooltip="Späť" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <h1 class="page-title">Detail objednávky</h1>
+  <div class="header-buttons" *ngIf="objednavkaDetailData?.id">
+    <button mat-raised-button style="background-color: var(--primary-color); color: white;" (click)="setClientError()">
+      <mat-icon>report_problem</mat-icon>
+      Nastaviť chybu klienta
+    </button>
+    <button 
+      mat-raised-button 
+      style="background-color: var(--primary-color); color: white;" 
+      (click)="toggleOrderCancellation()"
+      *ngIf="!isOrderInVybavenePhase">
+      <mat-icon>{{ isOrderCancelled ? 'restore' : 'cancel' }}</mat-icon>
+      {{ isOrderCancelled ? 'Obnoviť objednávku' : 'Zrušiť objednávku' }}
+    </button>
+    <button mat-raised-button style="background-color: var(--error-color); color: white;" (click)="confirmDelete()">
+      <mat-icon>delete</mat-icon>
+      Vymazať
+    </button>
+  </div>
+</div> 

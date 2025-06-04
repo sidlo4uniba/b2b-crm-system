@@ -1,0 +1,254 @@
+<div class="form-container">
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>Informácie o objednávke</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="details-grid">
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">task</mat-icon>
+          <span class="details-label">Fáza objednávky:</span>
+          <span class="details-value" 
+                [ngClass]="{
+                  'phase-nacenenie': orderDetail?.faza === ObjednavkaFazaEnum.Nacenenie,
+                  'phase-nacenenie-caka': orderDetail?.faza === ObjednavkaFazaEnum.NacenenieCaka,
+                  'phase-vyroba-neriesene': orderDetail?.faza === ObjednavkaFazaEnum.VyrobaNeriesene,
+                  'phase-vyroba-nemozna': orderDetail?.faza === ObjednavkaFazaEnum.VyrobaNemozna,
+                  'phase-vyroba-caka': orderDetail?.faza === ObjednavkaFazaEnum.VyrobaCaka,
+                  'phase-odoslanie-caka': orderDetail?.faza === ObjednavkaFazaEnum.OdoslanieCaka,
+                  'phase-platba-caka': orderDetail?.faza === ObjednavkaFazaEnum.PlatbaCaka,
+                  'phase-vybavene': orderDetail?.faza === ObjednavkaFazaEnum.Vybavene
+                }">
+            <strong>{{ getFazaText(orderDetail?.faza) }}</strong>
+            <mat-icon *ngIf="orderDetail?.faza === ObjednavkaFazaEnum.Vybavene" style="color: green;">check_circle</mat-icon>
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">report</mat-icon>
+          <span class="details-label">Stav:</span>
+          <span class="details-value" [ngClass]="{'canceled-order': orderDetail?.zrusene}">
+            <strong *ngIf="orderDetail?.zrusene">Zrušená</strong>
+            <mat-icon style="color: var(--error-color);" *ngIf="orderDetail?.zrusene">
+              cancel
+            </mat-icon>
+            <span *ngIf="!orderDetail?.zrusene">Aktívna</span>
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">payments</mat-icon>
+          <span class="details-label">Zaplatené:</span>
+          <span class="details-value">
+            
+            <ng-container *ngIf="orderDetail?.faza === ObjednavkaFazaEnum.Nacenenie || orderDetail?.faza === ObjednavkaFazaEnum.NacenenieCaka; else otherPhases">
+              <span style="color: grey;">Nenacenené</span>
+            </ng-container>
+
+            
+            <ng-template #otherPhases>
+              
+              <ng-container *ngIf="orderDetail?.zaplatene; else notPaid">
+                <span style="color: green;">
+                  Zaplatená
+                  <mat-icon style="color: green;">check_circle</mat-icon>
+                </span>
+              </ng-container>
+
+              
+              <ng-template #notPaid>
+                
+                <ng-container *ngIf="orderDetail?.faza === ObjednavkaFazaEnum.PlatbaCaka; else otherNotPaid">
+                  <strong style="color: var(--error-color);"> 
+                    Čakáme na platbu
+                    <mat-icon style="color: var(--error-color);">cancel</mat-icon>
+                  </strong>
+                </ng-container>
+                
+                <ng-template #otherNotPaid>
+                  Nezaplatené
+                </ng-template>
+              </ng-template>
+            </ng-template>
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">error_outline</mat-icon>
+          <span class="details-label">Chyba klienta:</span>
+          <span class="details-value" [ngClass]="{'no-value': orderDetail?.chybaKlienta === null}">
+            {{ getChybaKlientaText(orderDetail?.chybaKlienta) || 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="details-section-divider"></div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">event</mat-icon>
+          <span class="details-label">Očakávané doručenie:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.ocakavanyDatumDorucenia}">
+            {{ orderDetail?.ocakavanyDatumDorucenia ? (orderDetail?.ocakavanyDatumDorucenia | date:'dd.MM.yyyy') : 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">event_available</mat-icon>
+          <span class="details-label">Naplánovaná výroba:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.naplanovanyDatumVyroby}">
+            {{ orderDetail?.naplanovanyDatumVyroby ? (orderDetail?.naplanovanyDatumVyroby | date:'dd.MM.yyyy') : 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="details-section-divider"></div>
+
+        
+        <div class="details-item with-button">
+          <mat-icon class="details-icon">business</mat-icon>
+          <span class="details-label">Názov firmy:</span>
+          <span class="details-value">
+            {{ orderDetail?.firmaNazov }}
+            <button mat-icon-button color="primary" (click)="navigateToFirma(orderDetail?.firmaId)" matTooltip="Prejsť na firmu">
+              <mat-icon>open_in_new</mat-icon>
+            </button>
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">numbers</mat-icon>
+          <span class="details-label">IČO firmy:</span>
+          <span class="details-value">
+            {{ orderDetail?.firmaICO }}
+          </span>
+        </div>
+
+        <div class="details-section-divider"></div>
+
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">person</mat-icon>
+          <span class="details-label">Kontaktná osoba:</span>
+          <span class="details-value">
+            {{ orderDetail?.kontaktnaOsobaMeno }} {{ orderDetail?.kontaktnaOsobaPriezvisko }}
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">phone</mat-icon>
+          <span class="details-label">Telefón:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.kontaktnaOsobaTelefon}">
+            {{ orderDetail?.kontaktnaOsobaTelefon || 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="details-item">
+          <mat-icon class="details-icon">email</mat-icon>
+          <span class="details-label">Email:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.kontaktnaOsobaEmail}">
+            {{ orderDetail?.kontaktnaOsobaEmail || 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="button-row">
+          <button mat-flat-button style="background-color: var(--primary-color);" (click)="editKontaktnaOsoba()">
+            <mat-icon>edit</mat-icon>
+            Upraviť kontaktnú osobu
+          </button>
+          <button mat-flat-button style="background-color: var(--primary-color);" (click)="changeKontaktnaOsoba()">
+            <mat-icon>swap_horiz</mat-icon>
+            Zmeniť kontaktnú osobu
+          </button>
+        </div>
+
+        <div class="details-section-divider"></div>
+
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">today</mat-icon>
+          <span class="details-label">Vytvorené dňa:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.vytvoreneDna}">
+            {{ orderDetail?.vytvoreneDna ? (orderDetail?.vytvoreneDna | date:'dd.MM.yyyy - HH:mm') : 'prázdne pole' }}
+          </span>
+        </div>
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">person</mat-icon>
+          <span class="details-label">Vytvoril používateľ:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.vytvorilUzivatel}">
+            {{ orderDetail?.vytvorilUzivatel || 'prázdne pole' }}
+          </span>
+        </div>
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">update</mat-icon>
+          <span class="details-label">Upravené dňa:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.upraveneDna}">
+            {{ orderDetail?.upraveneDna ? (orderDetail?.upraveneDna | date:'dd.MM.yyyy - HH:mm') : 'prázdne pole' }}
+          </span>
+        </div>
+        
+        <div class="details-item">
+          <mat-icon class="details-icon">edit</mat-icon>
+          <span class="details-label">Upravil používateľ:</span>
+          <span class="details-value" [ngClass]="{'no-value': !orderDetail?.upravilUzivatel}">
+            {{ orderDetail?.upravilUzivatel || 'prázdne pole' }}
+          </span>
+        </div>
+
+        <div class="details-section-divider"></div>
+
+        
+        <div class="details-item full-width">
+          <mat-icon class="details-icon">note</mat-icon>
+          <span class="details-label">Poznámka:</span>
+          <div class="details-value multiline" [ngClass]="{'no-value': !orderDetail?.poznamka}">
+            {{ orderDetail?.poznamka || 'prázdne pole' }}
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<style>  
+  .form-card {
+    margin-bottom: 20px;
+  }
+  
+  .canceled-order {
+    color: var(--error-color) !important;
+  }
+  
+  .with-button {
+    display: flex;
+    align-items: center;
+  }
+  
+  .button-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  
+  .full-width {
+    grid-column: 1 / -1;
+  }
+  
+  .multiline {
+    white-space: pre-wrap;
+    padding: 8px;
+    border-radius: 4px;
+  }
+  
+  .phase-nacenenie { color: #00a0eb; } /* Orange */
+  .phase-nacenenie-caka { color: #02569b; } /* Darker orange */
+  
+  .phase-vyroba-neriesene { color: #864007; } /* Tomato */
+  .phase-vyroba-nemozna { color: var(--error-color); } /* Crimson */
+  .phase-vyroba-caka { color: #8418ff; } /* Indian red */
+  .phase-odoslanie-caka { color: #860480; } /* Orange red */
+  
+  .phase-platba-caka { color: var(--error-color); } /* Red */
+  
+  .phase-vybavene { color: green; } /* Lime green */
+</style>
